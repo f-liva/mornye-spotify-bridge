@@ -32,3 +32,7 @@ docker run --rm -u $(id -u):$(id -g) -e GRADLE_USER_HOME=/gh -e HOME=/home/u \
 
 The release build is signed with the debug key in `~/.android/debug.keystore`: keep that
 file, or updates will not install over the previous version.
+
+## License
+
+MIT, see `LICENSE`.
