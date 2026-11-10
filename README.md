@@ -30,13 +30,22 @@ No local JDK needed: Gradle runs in Docker against the SDK in `~/android-sdk`.
 ```bash
 echo "sdk.dir=/sdk" > local.properties
 docker run --rm -u $(id -u):$(id -g) -e GRADLE_USER_HOME=/gh -e HOME=/home/u \
+  -e ANDROID_USER_HOME=/home/u/.android -e JAVA_TOOL_OPTIONS=-Duser.home=/home/u \
   -v ~/.gradle:/gh -v ~/.android:/home/u/.android -v ~/android-sdk:/sdk -v "$PWD":/p -w /p \
   gradle:8.5-jdk17 gradle --no-daemon testDebugUnitTest assembleRelease
 # -> app/build/outputs/apk/release/app-release.apk
 ```
 
 The release build is signed with the debug key in `~/.android/debug.keystore`: keep that
-file, or updates will not install over the previous version.
+file, or updates will not install over the previous version. `ANDROID_USER_HOME` and
+`user.home` are required: without them Gradle runs as the image's `gradle` user, creates a
+fresh keystore in the container's throwaway home and every build gets a different key
+(1.0.0 was built that way). Check: the cert digest must be `0ce9acb3…`:
+
+```bash
+docker run --rm -v "$PWD":/p -v ~/android-sdk:/sdk gradle:8.5-jdk17 \
+  /sdk/build-tools/34.0.0/apksigner verify --print-certs /p/app/build/outputs/apk/release/app-release.apk
+```
 
 ## License
 
