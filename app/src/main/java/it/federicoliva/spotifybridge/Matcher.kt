@@ -6,7 +6,7 @@ import java.text.Normalizer
 data class Album(val id: String, val name: String, val artists: List<String>)
 
 /** Tags read from the audio file that Mornye hands over. */
-data class Tags(val artist: String?, val album: String?, val title: String?)
+data class Tags(val artist: String?, val album: String?, val title: String?, val genre: String? = null)
 
 object Matcher {
 
@@ -74,5 +74,22 @@ object Matcher {
             else -> return 0
         }
         return albumScore + artistScore
+    }
+}
+
+/** Decides which files are podcast episodes, to be played locally instead of opened in Spotify. */
+object Podcast {
+
+    fun keywords(setting: String?): List<String> =
+        setting.orEmpty().split(',').map { it.trim() }.filter { it.isNotEmpty() }
+
+    /**
+     * True when the genre tag says podcast, or the file's location contains one of the
+     * user's keywords (case-insensitive). [location] is the decoded content URI: Mornye's
+     * FileProvider and SAF document URIs both carry the real path.
+     */
+    fun matches(genre: String?, location: String, keywords: List<String>): Boolean {
+        if (genre?.contains("podcast", ignoreCase = true) == true) return true
+        return keywords.any { location.contains(it, ignoreCase = true) }
     }
 }

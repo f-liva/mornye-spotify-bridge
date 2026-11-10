@@ -95,6 +95,8 @@ class SpotifyApi(private val prefs: SharedPreferences) {
         const val PREFS = "spotify"
         const val KEY_CLIENT_ID = "client_id"
         const val KEY_CLIENT_SECRET = "client_secret"
+        const val KEY_PODCAST_KEYWORDS = "podcast_keywords"
+        const val KEY_PODCAST_PLAYER = "podcast_player"
         private const val KEY_TOKEN = "token"
         private const val KEY_TOKEN_EXP = "token_exp"
 

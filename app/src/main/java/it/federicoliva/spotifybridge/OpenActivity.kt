@@ -2,6 +2,7 @@ package it.federicoliva.spotifybridge
 
 import android.app.Activity
 import android.content.Context
+import android.net.Uri
 import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
@@ -22,8 +23,8 @@ class OpenActivity : Activity() {
         if (uri == null) {
             finish(); return
         }
-        toast("Cerco l'album su Spotify…")
         val app = applicationContext
+        val prefs = getSharedPreferences(SpotifyApi.PREFS, Context.MODE_PRIVATE)
         Thread {
             val tags = try {
                 Bridge.readTags(app, uri)
@@ -32,8 +33,24 @@ class OpenActivity : Activity() {
                 done("Non riesco a leggere i tag del file"); return@Thread
             }
             Log.i(TAG, "tags: $tags")
+            val keywords = Podcast.keywords(prefs.getString(SpotifyApi.KEY_PODCAST_KEYWORDS, null))
+            if (Podcast.matches(tags.genre, Uri.decode(uri.toString()), keywords)) {
+                Log.i(TAG, "podcast, playing locally")
+                val mime = intent.type ?: contentResolver.getType(uri) ?: "audio/*"
+                main.post {
+                    try {
+                        Bridge.playLocally(this, uri, mime, prefs.getString(SpotifyApi.KEY_PODCAST_PLAYER, null))
+                    } catch (e: Exception) {
+                        Log.w(TAG, "local playback failed", e)
+                        toast("Nessun player per il podcast: ${e.message}")
+                    }
+                    finish()
+                }
+                return@Thread
+            }
+            main.post { toast("Cerco l'album su Spotify…") }
             try {
-                val album = Bridge.resolve(SpotifyApi(app.getSharedPreferences(SpotifyApi.PREFS, Context.MODE_PRIVATE)), tags)
+                val album = Bridge.resolve(SpotifyApi(prefs), tags)
                 if (album != null) {
                     Log.i(TAG, "matched ${album.id} ${album.name} ${album.artists}")
                     Bridge.openAlbum(app, album.id)

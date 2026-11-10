@@ -6,6 +6,11 @@
     <!-- Android 11+ package visibility: lets setPackage() reach the Spotify app. -->
     <queries>
         <package android:name="com.spotify.music" />
+        <!-- Audio players, for the podcast player picker and the local-playback chooser. -->
+        <intent>
+            <action android:name="android.intent.action.VIEW" />
+            <data android:mimeType="audio/*" />
+        </intent>
     </queries>
 
     <application

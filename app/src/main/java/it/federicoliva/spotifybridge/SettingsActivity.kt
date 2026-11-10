@@ -1,6 +1,7 @@
 package it.federicoliva.spotifybridge
 
 import android.app.Activity
+import android.app.AlertDialog
 import android.content.Context
 import android.os.Bundle
 import android.text.InputType
@@ -39,6 +40,8 @@ class SettingsActivity : Activity() {
         val id = field("Client ID", prefs.getString(SpotifyApi.KEY_CLIENT_ID, ""))
         val secret = field("Client Secret", prefs.getString(SpotifyApi.KEY_CLIENT_SECRET, ""), secret = true)
         val status = text("")
+        // Added to the layout further down, saved by the same button as the credentials.
+        val keywords = field("es. Podcasts, AntennaPod", prefs.getString(SpotifyApi.KEY_PODCAST_KEYWORDS, ""))
         root.addView(id); root.addView(secret)
         root.addView(Button(this).apply {
             text = "Salva"
@@ -46,9 +49,35 @@ class SettingsActivity : Activity() {
                 prefs.edit()
                     .putString(SpotifyApi.KEY_CLIENT_ID, id.text.toString().trim())
                     .putString(SpotifyApi.KEY_CLIENT_SECRET, secret.text.toString().trim())
+                    .putString(SpotifyApi.KEY_PODCAST_KEYWORDS, keywords.text.toString().trim())
                     .apply()
                 SpotifyApi.clearToken(prefs)
                 status.text = "Salvato"
+            }
+        })
+
+        root.addView(text(
+            "Podcast: i file con genere \"Podcast\" o in una cartella che contiene una di queste " +
+                "parole (separate da virgola) suonano in locale invece di aprire Spotify. Premi Salva dopo averle cambiate.",
+        ))
+        root.addView(keywords)
+        fun playerLabel(): String {
+            val pkg = prefs.getString(SpotifyApi.KEY_PODCAST_PLAYER, null)
+            val name = Bridge.audioPlayers(this).firstOrNull { it.first == pkg }?.second ?: pkg
+            return "Player podcast: ${name ?: "chiedi ogni volta"}"
+        }
+        root.addView(Button(this).apply {
+            text = playerLabel()
+            setOnClickListener {
+                val players = Bridge.audioPlayers(this@SettingsActivity)
+                val labels = (listOf("Chiedi ogni volta") + players.map { it.second }).toTypedArray()
+                AlertDialog.Builder(this@SettingsActivity)
+                    .setTitle("Player per i podcast")
+                    .setItems(labels) { _, i ->
+                        prefs.edit().putString(SpotifyApi.KEY_PODCAST_PLAYER, if (i == 0) null else players[i - 1].first).apply()
+                        text = playerLabel()
+                    }
+                    .show()
             }
         })
 

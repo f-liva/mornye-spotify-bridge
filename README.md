@@ -8,6 +8,11 @@ Lookup: Spotify Web API search (client credentials), album query first, then the
 matching track; the artist must match and the exact edition wins (`Matcher.kt`, unit-tested).
 No credible match, or no credentials: it opens Spotify's search for artist + album.
 
+**Podcasts** play locally instead: a file whose genre tag contains "podcast", or whose path
+contains one of the keywords set in the app (e.g. `Podcasts, AntennaPod`), goes to the player
+chosen in settings, or to Android's chooser without this app and without Mornye (opening a file
+"with Mornye" switches its Library back to the internal player).
+
 ## Setup
 
 1. Create an app on https://developer.spotify.com/dashboard (Web API; any redirect URI,
